@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Система блога</title>
+    <link rel="stylesheet" href="/main.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Система блога</h1>
+        
+        <div id="auth-container">
+        </div>
+        
+        <div id="profile-container" class="hidden">
+            <div id="posts-section">
+                <h2>Мои посты</h2>
+                <div id="posts-container"></div>
+                
+                <div class="create-post-form">
+                    <h3>Создать новый пост</h3>
+                    <div class="form-group">
+                        <input type="text" id="post-title" placeholder="Заголовок поста">
+                    </div>
+                    <div class="form-group">
+                        <textarea id="post-description" placeholder="Описание поста" rows="4"></textarea>
+                    </div>
+                    <button id="create-post-btn">Создать пост</button>
+                    <div id="post-error" class="error-message"></div>
+                    <div id="post-success" class="success-message"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script src="/app.js"></script>
+</body>
+</html>
