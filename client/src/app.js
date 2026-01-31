@@ -171,53 +171,55 @@ class AuthApp {
         document.getElementById(`${tabName}-form`)?.classList.add('active');
     }
 
-    async register() {
-        const username = document.getElementById('register-username').value;
-        const password = document.getElementById('register-password').value;
-        const errorDiv = document.getElementById('register-error');
-        const successDiv = document.getElementById('register-success');
+async register() {
+    const username = document.getElementById('register-username').value;
+    const password = document.getElementById('register-password').value;
+    const errorDiv = document.getElementById('register-error');
+    const successDiv = document.getElementById('register-success');
 
-        errorDiv.style.display = 'none';
-        successDiv.style.display = 'none';
+    errorDiv.style.display = 'none';
+    successDiv.style.display = 'none';
+    errorDiv.innerHTML = '';
 
-        if (!username || !password) {
-            errorDiv.textContent = 'Пожалуйста, заполните все поля';
-            errorDiv.style.display = 'block';
-            return;
-        }
+    try {
+        const response = await fetch(`${this.baseUrl}/regUser`, {
+            method: 'POST',
+            credentials: 'include',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ login: username, password })
+        });
 
-        try {
-            const response = await fetch(`${this.baseUrl}/regUser`, {
-                method: 'POST',
-                credentials: 'include',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ login: username, password })
-            });
+        const data = await response.json();
 
-            const data = await response.json();
+        if (data.status) {
+            successDiv.textContent = data.message;
+            successDiv.style.display = 'block';
 
-            if (data.status) {
-                successDiv.textContent = data.message;
-                successDiv.style.display = 'block';
-                
-                document.getElementById('register-username').value = '';
-                document.getElementById('register-password').value = '';
-                
-                setTimeout(() => {
-                    this.switchTab('login');
-                    document.getElementById('login-username').value = username;
-                    successDiv.style.display = 'none';
-                }, 2000);
+            document.getElementById('register-username').value = '';
+            document.getElementById('register-password').value = '';
+
+            setTimeout(() => {
+                this.switchTab('login');
+                document.getElementById('login-username').value = username;
+                successDiv.style.display = 'none';
+            }, 1500);
+        } else {
+            if (Array.isArray(data.errors)) {
+                errorDiv.innerHTML = data.errors
+                    .map(err => `<div>• ${err}</div>`)
+                    .join('');
             } else {
                 errorDiv.textContent = data.message || 'Ошибка регистрации';
-                errorDiv.style.display = 'block';
             }
-        } catch (error) {
-            console.error('Ошибка регистрации:', error);
-            errorDiv.textContent = 'Ошибка соединения с сервером';
             errorDiv.style.display = 'block';
         }
+    } catch (error) {
+        console.error('Ошибка регистрации:', error);
+        errorDiv.textContent = 'Ошибка соединения с сервером';
+        errorDiv.style.display = 'block';
     }
+}
+
     
     async login() {
         const username = document.getElementById('login-username').value;

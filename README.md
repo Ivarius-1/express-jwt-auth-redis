@@ -1,4 +1,4 @@
-# express-jwt-auth-api
+# express-jwt-auth-redis
 
 Backend API на Node.js с JWT-аутентификацией, refresh-токенами, Redis и rate limiting.  
 Проект демонстрирует production-подход к авторизации и защите API.
