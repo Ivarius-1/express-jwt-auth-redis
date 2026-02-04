@@ -11,16 +11,12 @@ class AuthApp {
         this.checkAuthStatus();
     }
 
-    // ==========================
-    // Новый метод для защищённых запросов с авто-refresh
-    // ==========================
     async fetchWithAuth(url, options = {}) {
         let response = await fetch(url, {
             ...options,
             credentials: 'include'
         });
 
-        // accessToken истёк
         if (response.status === 401 || response.status === 403) {
             const refreshResponse = await fetch(`${this.baseUrl}/refresh`, {
                 method: 'POST',
@@ -33,7 +29,6 @@ class AuthApp {
                 throw new Error('Сессия истекла');
             }
 
-            // accessToken обновился → повторяем запрос
             response = await fetch(url, {
                 ...options,
                 credentials: 'include'
@@ -110,59 +105,87 @@ class AuthApp {
         `;
     }
 
-    renderProfileView(user) {
-        const profileContainer = document.getElementById('profile-container');
-        profileContainer.innerHTML = `
-            <div class="profile-info">
-                <h2>Добро пожаловать, ${user.login}!</h2>
-                <p><strong>Логин:</strong> ${user.login}</p>
-                <p><strong>Статус:</strong> <span style="color: green;">● Онлайн</span></p>
+renderProfileView(user) {
+    const avatarUrl = `/static/avatars/${user.id}/avatar.jpg`;
+    const timestamp = `?t=${Date.now()}`;
+
+    const profileContainer = document.getElementById('profile-container');
+    profileContainer.innerHTML = `
+        <div class="avatar-section">
+            <div class="avatar-wrapper" style="margin-bottom: 20px;">
+                <img
+                    id="avatar-img"
+                    src="${avatarUrl}${timestamp}"
+                    width="120"
+                    height="120"
+                    style="border-radius:50%; object-fit: cover; border: 2px solid #ccc;"
+                    onerror="this.onerror=null; this.src='https://ui-avatars.com/api/?name=${user.login}&background=random'"
+                >
+            </div>
+
+            <div class="upload-controls">
+                <input type="file" id="avatar-input" accept="image/*" style="display: none;">
+                <button onclick="document.getElementById('avatar-input').click()" class="secondary-btn">Выбрать фото</button>
+                <button id="upload-avatar-btn" class="primary-btn">Загрузить аватар</button>
+            </div>
+
+            <div id="avatar-error" class="error-message" style="color: red; display: none;"></div>
+            <div id="avatar-success" class="success-message" style="color: green; display: none;"></div>
+        </div>
+
+        <div class="profile-info">
+            <h2>Добро пожаловать, ${user.login}!</h2>
+            <p><strong>ID пользователя:</strong> ${user.id}</p>
+            <p><strong>Статус:</strong> <span style="color: green;">● Онлайн</span></p>
+        </div>
+
+        <div id="posts-section">
+            <h2>Мои посты</h2>
+            <div id="posts-container">
+                <div class="loading">Загрузка постов...</div>
             </div>
             
-            <div id="posts-section">
-                <h2>Мои посты</h2>
-                <div id="posts-container">
-                    <div class="loading">Загрузка постов...</div>
+            <div class="create-post-form">
+                <h3>Создать новый пост</h3>
+                <div class="form-group">
+                    <input type="text" id="post-title" placeholder="Заголовок поста">
                 </div>
-                
-                <div class="create-post-form">
-                    <h3>Создать новый пост</h3>
-                    <div class="form-group">
-                        <input type="text" id="post-title" placeholder="Заголовок поста">
-                    </div>
-                    <div class="form-group">
-                        <textarea id="post-description" placeholder="Описание поста" rows="4"></textarea>
-                    </div>
-                    <button id="create-post-btn">Создать пост</button>
-                    <div id="post-error" class="error-message"></div>
-                    <div id="post-success" class="success-message"></div>
+                <div class="form-group">
+                    <textarea id="post-description" placeholder="Описание поста" rows="4"></textarea>
                 </div>
+                <button id="create-post-btn">Создать пост</button>
+                <div id="post-error" class="error-message"></div>
+                <div id="post-success" class="success-message"></div>
             </div>
-            
-            <button id="logout-btn" style="margin-top: 30px;">Выйти</button>
-        `;
+        </div>
+
+        <button id="logout-btn" style="margin-top: 30px;">Выйти</button>
+    `;
+}
+
+   setupEventListeners() {
+    document.addEventListener('click', (e) => {
+        if (e.target.classList.contains('tab-button')) {
+            this.switchTab(e.target.dataset.tab);
+        }
+
+        if (e.target.id === 'register-btn') this.register();
+        if (e.target.id === 'login-btn') this.login();
+        if (e.target.id === 'logout-btn') this.logout();
+        if (e.target.id === 'create-post-btn') this.createPost();
+        
+        if (e.target.id === 'upload-avatar-btn') this.uploadAvatar();
+
+        if (e.target.classList.contains('delete-post-btn')) {
+            this.deletePost(e.target.dataset.postId);
+        }
+
+        if (e.target.classList.contains('edit-post-btn')) {
+            this.editPost(e.target.dataset.postId);
+        }
+    });
     }
 
-    setupEventListeners() {
-        document.addEventListener('click', (e) => {
-            if (e.target.classList.contains('tab-button')) {
-                this.switchTab(e.target.dataset.tab);
-            }
-            
-            if (e.target.id === 'register-btn') this.register();
-            if (e.target.id === 'login-btn') this.login();
-            if (e.target.id === 'logout-btn') this.logout();
-            if (e.target.id === 'create-post-btn') this.createPost();
-            
-            if (e.target.classList.contains('delete-post-btn')) {
-                this.deletePost(e.target.dataset.postId);
-            }
-            
-            if (e.target.classList.contains('edit-post-btn')) {
-                this.editPost(e.target.dataset.postId);
-            }
-        });
-    }
 
     switchTab(tabName) {
         document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
@@ -265,6 +288,54 @@ async register() {
             errorDiv.style.display = 'block';
         }
     }
+
+   async uploadAvatar() {
+    const fileInput = document.getElementById('avatar-input');
+    const errorDiv = document.getElementById('avatar-error');
+    const successDiv = document.getElementById('avatar-success');
+
+    errorDiv.style.display = 'none';
+    successDiv.style.display = 'none';
+
+    if (!fileInput.files.length) {
+        errorDiv.textContent = 'Выберите файл';
+        errorDiv.style.display = 'block';
+        return;
+    }
+
+    const formData = new FormData();
+    formData.append('avatar', fileInput.files[0]);
+
+    try {
+        const response = await this.fetchWithAuth(`${this.baseUrl}/avatar`, {
+            method: 'POST',
+            body: formData
+        });
+
+        const data = await response.json();
+
+        if (!data.status) {
+            errorDiv.textContent = data.error || 'Ошибка загрузки';
+            errorDiv.style.display = 'block';
+            return;
+        }
+
+        const img = document.getElementById('avatar-img');
+        img.src = data.avatar + `?t=${Date.now()}`;
+
+        const user = JSON.parse(localStorage.getItem('user'));
+        user.avatar = data.avatar.replace('/static/', '');
+        localStorage.setItem('user', JSON.stringify(user));
+
+        successDiv.textContent = 'Аватар обновлён';
+        successDiv.style.display = 'block';
+
+    } catch (e) {
+        errorDiv.textContent = 'Ошибка соединения';
+        errorDiv.style.display = 'block';
+    }
+}
+
 
     async loadUserPosts() {
         const postsContainer = document.getElementById('posts-container');

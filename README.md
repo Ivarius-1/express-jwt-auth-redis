@@ -1,13 +1,13 @@
 # express-jwt-auth-redis
 
-Backend API на Node.js с JWT-аутентификацией, refresh-токенами, Redis и rate limiting.  
-Проект демонстрирует production-подход к авторизации и защите API.
+Backend API на Node.js с JWT-аутентификацией, refresh-токенами, Redis и rate limiting.
 
 ---
 
 ## Возможности
 
 - Регистрация и авторизация пользователей
+- Добавление и загрузки аватарки
 - Access / Refresh JWT токены
 - Хранение refresh-токенов в Redis
 - Middleware для защиты роутов
@@ -28,6 +28,7 @@ Backend API на Node.js с JWT-аутентификацией, refresh-токе
 - **JWT (jsonwebtoken)**
 - **bcrypt**
 - **dotenv**
+- **multer**
 
 ---
 
@@ -41,7 +42,9 @@ Backend API на Node.js с JWT-аутентификацией, refresh-токе
 | POST  | `/regUser`    | Регистрация пользователя | rateLimit(reg, 3, 60)
 | POST  | `/authUser`   | Авторизация              | rateLimit(auth, 5, 60)
 | POST  | `/logoutUser` | Выход (удаление токена)  |
-| POST  | `/refresh`    | Обновление access-токена | rateLimit(refresh, 10, 60)
+| POST  | `/refresh`    | Обновление access-токена | rateLimit(refresh, 3, 60)
+| POST  | `/avatar`     | Добавление изображения   | rateLimit(upload-avatar, 10, 60)
+|       |               |                          | uploadAvatar
 
 ---
 
@@ -66,6 +69,12 @@ Backend API на Node.js с JWT-аутентификацией, refresh-токе
 - Ограничивает количество запросов
 - Использует Redis `INCR + EXPIRE`
 - Работает по IP и типу роута
+
+### `uploadAvatar`
+- Создаёт папку в server/src/uploads/avatars/{req.user.id}
+- Переименовывает файл в avatar
+- Проверяет формат файла
+- Устанавливает максимальный размер в 2мб
 
 
 
