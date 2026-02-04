@@ -19,7 +19,9 @@ app.use(cookieParser(process.env.COOKIE_SECRET))
 
 app.use('/app', route)
 
+app.use('/static', express.static(path.join(_dirname,'uploads')))
 app.use(express.static(path.join(_dirname, '../../client/src')))
+
 app.get('/', (req, res) => {
     res.sendFile(path.join(_dirname, '../../client/src', 'index.html'))
 })
